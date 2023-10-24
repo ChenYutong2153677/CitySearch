@@ -34,6 +34,9 @@
         </el-card>
         <el-card class="content  animate__animated animate__fadeInRight">
             <div class="card_title">Environment</div>
+            <div>
+                <WeatherCard :city_weather_all="this.city_weather_all"></WeatherCard>
+            </div>
         </el-card>
         <el-card class="content animate__animated animate__fadeInLeft">
             <div class="card_title">Technology</div>
@@ -54,10 +57,12 @@
 import BackButton from '../components/BackButton.vue'
 import axios from 'axios'
 import NewsCard from "@/components/NewsCard.vue";
+import WeatherCard from "@/components/WeatherCard.vue";
 
 export default {
     name: 'DetailPage',
     components: {
+        WeatherCard,
         NewsCard,
         BackButton
     },
@@ -66,14 +71,35 @@ export default {
             city_name: '',
             city_general_info: '',
             city_img: '',
-            city_society_news_list: []
+            city_society_news_list: [],
+            city_latitude: '',//纬度
+            city_longitude: '',//经度
+            city_weather_all: {
+                city_weather: '',
+                city_weather_description: '',
+                city_wind_speed: '',
+                city_wind_deg: '',
+                city_wind_gust: '',
+                city_visiability: '',
+                city_clouds: '',
+
+                city_temperature: '',
+                city_feels_like: '',
+                city_temp_min: '',
+                city_temp_max: '',
+                city_pressure: '',
+                city_humidity: '',
+                city_sea_level: '',
+                city_grnd_level: '',
+            }
         }
     },
     created() {
         this.city_name = this.$route.query.input;
         console.log("new page:" + this.city_name);
-        this.getCityGeneralInfo();
-        this.getCitySocietyNews();
+        // this.getCityGeneralInfo();
+        // this.getCitySocietyNews();
+        // this.getCityCoordinate();
     },
     methods: {
         getCityGeneralInfo() {
@@ -103,7 +129,7 @@ export default {
             var index = this.city_general_info.lastIndexOf("。");
             this.city_general_info = this.city_general_info.substring(0, index + 1);
         },
-        handleCitySocietyNewsPic(){
+        handleCitySocietyNewsPic() {
             //把图片的url为空的url替换为本地null.jpg
             for (var i = 0; i < this.city_society_news_list.length; i++) {
                 if (this.city_society_news_list[i].picUrl == "") {
@@ -132,7 +158,116 @@ export default {
                 .catch((err) => {
                     console.log(err);
                 });
-        }
+        },
+        getCityCoordinate() {//获取城市经纬度
+            axios
+                .get("http://api.openweathermap.org/geo/1.0/direct", {
+                    params: {
+                        //?q={city name},{state code},{country code}&limit={limit}&appid={API key}
+                        q: this.city_name,
+                        limit: 1,
+                        appid: "f02e1a20513d8b58beb9fb4e51dc87cc"
+                    }
+                })
+                .then((res) => {
+                    console.log("获取到城市经纬度了！")
+                    console.log(res);
+                    if (res.status == 200) {
+                        this.city_latitude = res.data[0].lat;
+                        this.city_longitude = res.data[0].lon;
+                        console.log("纬度：" + this.city_latitude);
+                        console.log("经度：" + this.city_longitude);
+                        this.getCityEnvironmentInfo();
+                    }
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+        },
+        getCityEnvironmentInfo() {
+            //https://api.openweathermap.org/data/2.5/weather?lat=44.34&lon=10.99&appid=f02e1a20513d8b58beb9fb4e51dc87cc
+            axios
+                .get("https://api.openweathermap.org/data/2.5/weather", {
+                    params: {
+                        lat: this.city_latitude,
+                        lon: this.city_longitude,
+                        appid: "f02e1a20513d8b58beb9fb4e51dc87cc"
+                    }
+                })
+                .then((res) => {
+                    console.log("获取到城市天气了！")
+                    console.log(res)
+                    if (res.status == 200) {
+                        this.city_weather_all.city_weather = res.data.weather[0].main;
+                        this.city_weather_all.city_weather_description = res.data.weather[0].description;
+                        this.city_weather_all.city_wind_speed = res.data.wind.speed;
+                        this.city_weather_all.city_wind_deg = res.data.wind.deg;
+                        this.city_weather_all.city_wind_gust = res.data.wind.gust;
+                        this.city_weather_all.city_visiability = res.data.visibility;
+                        this.city_weather_all.city_clouds = res.data.clouds.all;
+                        this.city_weather_all.city_temperature = res.data.main.temp;
+                        this.city_weather_all.city_feels_like = res.data.main.feels_like;
+                        this.city_weather_all.city_temp_min = res.data.main.temp_min;
+                        this.city_weather_all.city_temp_max = res.data.main.temp_max;
+                        this.city_weather_all.city_pressure = res.data.main.pressure;
+                        this.city_weather_all.city_humidity = res.data.main.humidity;
+                        this.city_weather_all.city_sea_level = res.data.main.sea_level;
+                        this.city_weather_all.city_grnd_level = res.data.main.grnd_level;
+                        this.handleCityTemperature();
+                        this.handleCityWeatherblank();
+                    }
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+        },
+        handleCityTemperature(){
+            this.city_weather_all.city_temperature=parseInt(this.city_weather_all.city_temperature-273.15);
+            this.city_weather_all.city_feels_like=parseInt(this.city_weather_all.city_feels_like-273.15);
+            this.city_weather_all.city_temp_min=parseInt(this.city_weather_all.city_temp_min-273.15);
+            this.city_weather_all.city_temp_max=parseInt(this.city_weather_all.city_temp_max-273.15);
+        },
+        handleCityWeatherblank(){
+            //常见天气中英转换
+            if(this.city_weather_all.city_weather=="Clear"){
+                this.city_weather_all.city_weather="晴";
+            }
+            if(this.city_weather_all.city_weather=="Clouds"){
+                this.city_weather_all.city_weather="多云";
+            }
+            if(this.city_weather_all.city_weather=="Rain"){
+                this.city_weather_all.city_weather="雨";
+            }
+            if(this.city_weather_all.city_weather=="Snow"){
+                this.city_weather_all.city_weather="雪";
+            }
+            if(this.city_weather_all.city_weather=="Mist"){
+                this.city_weather_all.city_weather="雾";
+            }
+            if(this.city_weather_all.city_weather=="Haze"){
+                this.city_weather_all.city_weather="霾";
+            }
+            if(this.city_weather_all.city_weather=="Thunderstorm"){
+                this.city_weather_all.city_weather="雷暴";
+            }
+            if(this.city_weather_all.city_weather=="Drizzle"){
+                this.city_weather_all.city_weather="毛毛雨";
+            }
+            if(this.city_weather_all.city_weather=="Fog"){
+                this.city_weather_all.city_weather="雾";
+            }
+            if(this.city_weather_all.city_sea_level==null||this.city_weather_all.city_sea_level==undefined||this.city_weather_all.city_sea_level==""){
+                this.city_weather_all.city_sea_level="暂无 ";
+            }
+            if(this.city_weather_all.city_grnd_level==null||this.city_weather_all.city_grnd_level==undefined||this.city_weather_all.city_grnd_level==""){
+                this.city_weather_all.city_grnd_level="暂无 ";
+            }
+            if(this.city_weather_all.city_wind_gust==null||this.city_weather_all.city_wind_gust==undefined||this.city_weather_all.city_wind_gust==""){
+                this.city_weather_all.city_wind_gust="暂无 ";
+            }
+
+        },
+
     },
 }
 </script>
