@@ -46,10 +46,10 @@
         </el-card>
         <el-card class="content animate__animated animate__fadeInLeft">
             <div class="card_title">Online Map</div>
-            <baidu-map class="map" style="display: flex; flex-direction: column" center="北京">
-                <p style="padding: 0 10px;">以下是使用 `bm-view` 组件渲染的百度地图实例</p>
-                <bm-view style="width: 100%; height:100px; flex: 1"></bm-view>
-            </baidu-map>
+            <div>
+                <BaiduMap v-if="city_latitude!='' && city_longitude!=''"
+                    :city_latitude="this.city_latitude" :city_longitude="this.city_longitude"></BaiduMap>
+            </div>
         </el-card>
     </div>
 </template>
@@ -58,13 +58,14 @@ import BackButton from '../components/BackButton.vue'
 import axios from 'axios'
 import NewsCard from "@/components/NewsCard.vue";
 import WeatherCard from "@/components/WeatherCard.vue";
-
+import BaiduMap  from "@/components/BaiduMap.vue";
 export default {
     name: 'DetailPage',
     components: {
         WeatherCard,
         NewsCard,
-        BackButton
+        BackButton,
+        BaiduMap,
     },
     data() {
         return {
@@ -97,9 +98,9 @@ export default {
     created() {
         this.city_name = this.$route.query.input;
         console.log("new page:" + this.city_name);
-        // this.getCityGeneralInfo();
-        // this.getCitySocietyNews();
-        // this.getCityCoordinate();
+        this.getCityGeneralInfo();
+        this.getCitySocietyNews();
+        this.getCityCoordinate();
     },
     methods: {
         getCityGeneralInfo() {
