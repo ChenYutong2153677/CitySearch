@@ -1,7 +1,7 @@
 <template>
     <el-row>
         <el-col :span="12">
-            <el-card class="weather  box1">
+            <el-card class="weather  box1 bg1">
                 <div class="weather_title">{{city_weather_all.city_weather}}</div>
                 <div class="weather_description">({{city_weather_all.city_weather_description}})</div>
                 <el-row>
@@ -18,7 +18,7 @@
             </el-card>
         </el-col>
         <el-col :span="12">
-            <el-card class="temperature  box1">
+            <el-card class="temperature  box1 bg2">
                 <div class="temperature_title">{{city_weather_all.city_temperature}}°C</div>
                 <el-row>
                     <el-col :span="13">
@@ -50,6 +50,14 @@ export default {
 </script>
 
 <style scoped>
+.bg1{
+    background-image: url('../assets/weather_bg6.jpeg');
+    background-size: cover;
+}
+.bg2{
+    background-image: url('../assets/weather_bg5.jpg');
+    background-size: cover;
+}
 .temperature_title{
     font-size: 35px;
     font-weight: bold;

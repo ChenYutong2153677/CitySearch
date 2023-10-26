@@ -57,7 +57,7 @@ export default {
     margin: 20px auto;
     cursor: pointer;
     border-radius: 10px;
-    /*background-color: #e5effa;*/
+    background-color: rgb(233,230,225);
 }
 .card:hover{
     box-shadow: 0px 0px 8px 0px rgba(0,0,0,0.75);

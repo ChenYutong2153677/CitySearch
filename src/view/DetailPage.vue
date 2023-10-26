@@ -6,7 +6,7 @@
         <div class="title animate__animated animate__rubberBand">
             Hi ! {{ city_name }}
         </div>
-        <el-card class="content animate__animated animate__fadeInLeft">
+        <el-card class="content animate__animated animate__fadeInLeft" style="background-color: rgb(238,241,250);">
             <div class="card_title">General Information</div>
             <div>
                 <el-row>
@@ -21,30 +21,31 @@
                 </el-row>
             </div>
         </el-card>
-        <el-card class="content animate__animated animate__fadeInRight">
-            <div class="card_title">Economy</div>
+        <el-card class="content animate__animated animate__fadeInRight district_bg">
+            <div class="card_title" >District</div>
+            <DistrictName :districts="this.city_district_list" :province="this.city_province" v-if="city_district_list!=null||city_district_list!==undefined"></DistrictName>
         </el-card>
-        <el-card class="content animate__animated animate__fadeInLeft">
-            <div class="card_title">Society</div>
+        <el-card class="content animate__animated animate__fadeInLeft society_bg">
+            <div class="card_title" style="color: white">Society</div>
             <div class="news_list">
                 <div v-for="news in city_society_news_list" :key="news.id">
                     <NewsCard :news="news"></NewsCard>
                 </div>
             </div>
         </el-card>
-        <el-card class="content  animate__animated animate__fadeInRight">
+        <el-card class="content  animate__animated animate__fadeInRight env_bg">
             <div class="card_title">Environment</div>
             <div>
                 <WeatherCard :city_weather_all="this.city_weather_all"></WeatherCard>
             </div>
         </el-card>
-        <el-card class="content animate__animated animate__fadeInLeft">
-            <div class="card_title">Technology</div>
-        </el-card>
-        <el-card class="content  animate__animated animate__fadeInRight">
-            <div class="card_title">City data</div>
-        </el-card>
-        <el-card class="content animate__animated animate__fadeInLeft">
+<!--        <el-card class="content animate__animated animate__fadeInLeft">-->
+<!--            <div class="card_title">Technology</div>-->
+<!--        </el-card>-->
+<!--        <el-card class="content  animate__animated animate__fadeInRight">-->
+<!--            <div class="card_title">City data</div>-->
+<!--        </el-card>-->
+        <el-card class="content animate__animated animate__fadeInLeft map_bg">
             <div class="card_title">Online Map</div>
             <div>
                 <BaiduMap v-if="city_latitude!='' && city_longitude!=''"
@@ -59,6 +60,7 @@ import axios from 'axios'
 import NewsCard from "@/components/NewsCard.vue";
 import WeatherCard from "@/components/WeatherCard.vue";
 import BaiduMap  from "@/components/BaiduMap.vue";
+import DistrictName from "@/components/DistrictName.vue";
 export default {
     name: 'DetailPage',
     components: {
@@ -66,6 +68,7 @@ export default {
         NewsCard,
         BackButton,
         BaiduMap,
+        DistrictName,
     },
     data() {
         return {
@@ -92,7 +95,9 @@ export default {
                 city_humidity: '',
                 city_sea_level: '',
                 city_grnd_level: '',
-            }
+            },
+            city_district_list: [],
+            city_province: '',
         }
     },
     created() {
@@ -101,6 +106,7 @@ export default {
         this.getCityGeneralInfo();
         this.getCitySocietyNews();
         this.getCityCoordinate();
+        this.getCityDistrict();
     },
     methods: {
         getCityGeneralInfo() {
@@ -268,13 +274,57 @@ export default {
             }
 
         },
+        getCityDistrict(){
+            axios
+                .get(" https://www.mxnzp.com/api/address/search", {
+                    params: {
+                        type:1,
+                        value: this.city_name,
+                        app_id:"nthbnoflobuxtgrc",
+                        app_secret:"AmCSM8d56gnGKjL1xb7Rngk7O9Raldh7"
+                    }
+                })
+                .then((res) => {
+                    console.log("获取到城市行政区信息了！")
+                    console.log(res)
+                    if (res.status == 200) {
+                        this.city_district_list = res.data.data[0].pchilds[0].cchilds;
+                        console.log(this.city_district_list);
+                        //将city_district_name里的name重新赋值给city_district_name
+                        for(let i=0;i<this.city_district_list.length;i++){
+                            this.city_district_list[i]=this.city_district_list[i].name;
+                        }
+                        console.log(this.city_district_list);
+                        this.city_province=res.data.data[0].name;
+                    }
 
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+        },
+        getWorldCityDistrict(){
+
+        },
     },
 }
 </script>
 
 
 <style scoped>
+.district_bg{
+    /*background-color:rgb(249,246,226);*/
+    background-image: url('../assets/dis_bg.jpeg');
+    background-size: cover;
+}
+.env_bg{
+    background-image: url('../assets/weather_bg1.jpeg');
+    background-size: cover;
+}
+.society_bg{
+    background-image: url('../assets/newspaper.jpg');
+    background-size: cover;
+}
 .city_img {
     width: 90%;
     margin-left: 30px;

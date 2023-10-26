@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div style="margin-bottom: 20px">
         <BMap
                 ak="ojjuMMN8M12f95S5Cp4Uc1x1TSQPlOZE"
                 :plugins="['TrackAnimation']"
