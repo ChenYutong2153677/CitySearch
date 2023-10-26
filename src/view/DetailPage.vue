@@ -21,35 +21,37 @@
                 </el-row>
             </div>
         </el-card>
-        <el-card class="content animate__animated animate__fadeInRight district_bg">
-            <div class="card_title" >District</div>
-            <DistrictName :districts="this.city_district_list" :province="this.city_province" v-if="city_district_list!=null||city_district_list!==undefined"></DistrictName>
-        </el-card>
-        <el-card class="content animate__animated animate__fadeInLeft society_bg">
-            <div class="card_title" style="color: white">Society</div>
-            <div class="news_list">
-                <div v-for="news in city_society_news_list" :key="news.id">
-                    <NewsCard :news="news"></NewsCard>
-                </div>
+        <el-card class="content animate__animated animate__fadeInRight map_bg">
+            <div class="card_title">Online Map</div>
+            <div>
+                <BaiduMap v-if="city_latitude!='' && city_longitude!=''"
+                          :city_latitude="this.city_latitude" :city_longitude="this.city_longitude"></BaiduMap>
             </div>
         </el-card>
-        <el-card class="content  animate__animated animate__fadeInRight env_bg">
+        <el-card class="content  animate__animated animate__fadeInLeft env_bg">
             <div class="card_title">Environment</div>
             <div>
                 <WeatherCard :city_weather_all="this.city_weather_all"></WeatherCard>
             </div>
         </el-card>
-<!--        <el-card class="content animate__animated animate__fadeInLeft">-->
-<!--            <div class="card_title">Technology</div>-->
-<!--        </el-card>-->
-<!--        <el-card class="content  animate__animated animate__fadeInRight">-->
-<!--            <div class="card_title">City data</div>-->
-<!--        </el-card>-->
-        <el-card class="content animate__animated animate__fadeInLeft map_bg">
-            <div class="card_title">Online Map</div>
-            <div>
-                <BaiduMap v-if="city_latitude!='' && city_longitude!=''"
-                    :city_latitude="this.city_latitude" :city_longitude="this.city_longitude"></BaiduMap>
+        <el-card class="content animate__animated animate__fadeInRight district_bg">
+            <div class="card_title">District</div>
+            <DistrictName :foreign="is_foreign" :districts="this.city_district_list" :province="this.city_province"
+                          v-if="city_district_list!=null||city_district_list!==undefined"></DistrictName>
+        </el-card>
+        <el-card class="content animate__animated animate__fadeInLeft society_bg">
+            <div class="card_title" style="color: white">Society</div>
+            <div v-if="!this.is_newlist_empty">
+                <div class="news_list">
+                    <div v-for="news in city_society_news_list" :key="news.id">
+                        <NewsCard :news="news"></NewsCard>
+                    </div>
+                </div>
+            </div>
+            <div v-if="is_newlist_empty" >
+                <el-card style="border-radius: 10px;width: 90%;background-color:  rgb(233,230,225)">
+                该城市没有获取到有关的社会新闻呀~看看别的城市吧！(国内的城市新闻会更多哦!)
+                </el-card>
             </div>
         </el-card>
     </div>
@@ -59,8 +61,9 @@ import BackButton from '../components/BackButton.vue'
 import axios from 'axios'
 import NewsCard from "@/components/NewsCard.vue";
 import WeatherCard from "@/components/WeatherCard.vue";
-import BaiduMap  from "@/components/BaiduMap.vue";
+import BaiduMap from "@/components/BaiduMap.vue";
 import DistrictName from "@/components/DistrictName.vue";
+
 export default {
     name: 'DetailPage',
     components: {
@@ -98,6 +101,8 @@ export default {
             },
             city_district_list: [],
             city_province: '',
+            is_foreign: false,
+            is_newlist_empty: false,
         }
     },
     created() {
@@ -157,6 +162,11 @@ export default {
                     console.log("获取到城市社会新闻了！")
                     console.log(res)
                     var response = res.data
+                    //判断是否为空
+                    if (response.code==250) {
+                        this.is_newlist_empty = true;
+                        console.log("该城市新闻列表为空！")
+                    }
                     if (response.code == 200) {
                         this.city_society_news_list = response.result.newslist;
                         this.handleCitySocietyNewsPic();
@@ -228,74 +238,79 @@ export default {
                     console.log(err);
                 });
         },
-        handleCityTemperature(){
-            this.city_weather_all.city_temperature=parseInt(this.city_weather_all.city_temperature-273.15);
-            this.city_weather_all.city_feels_like=parseInt(this.city_weather_all.city_feels_like-273.15);
-            this.city_weather_all.city_temp_min=parseInt(this.city_weather_all.city_temp_min-273.15);
-            this.city_weather_all.city_temp_max=parseInt(this.city_weather_all.city_temp_max-273.15);
+        handleCityTemperature() {
+            this.city_weather_all.city_temperature = parseInt(this.city_weather_all.city_temperature - 273.15);
+            this.city_weather_all.city_feels_like = parseInt(this.city_weather_all.city_feels_like - 273.15);
+            this.city_weather_all.city_temp_min = parseInt(this.city_weather_all.city_temp_min - 273.15);
+            this.city_weather_all.city_temp_max = parseInt(this.city_weather_all.city_temp_max - 273.15);
         },
-        handleCityWeatherblank(){
+        handleCityWeatherblank() {
             //常见天气中英转换
-            if(this.city_weather_all.city_weather=="Clear"){
-                this.city_weather_all.city_weather="晴";
+            if (this.city_weather_all.city_weather == "Clear") {
+                this.city_weather_all.city_weather = "晴";
             }
-            if(this.city_weather_all.city_weather=="Clouds"){
-                this.city_weather_all.city_weather="多云";
+            if (this.city_weather_all.city_weather == "Clouds") {
+                this.city_weather_all.city_weather = "多云";
             }
-            if(this.city_weather_all.city_weather=="Rain"){
-                this.city_weather_all.city_weather="雨";
+            if (this.city_weather_all.city_weather == "Rain") {
+                this.city_weather_all.city_weather = "雨";
             }
-            if(this.city_weather_all.city_weather=="Snow"){
-                this.city_weather_all.city_weather="雪";
+            if (this.city_weather_all.city_weather == "Snow") {
+                this.city_weather_all.city_weather = "雪";
             }
-            if(this.city_weather_all.city_weather=="Mist"){
-                this.city_weather_all.city_weather="雾";
+            if (this.city_weather_all.city_weather == "Mist") {
+                this.city_weather_all.city_weather = "雾";
             }
-            if(this.city_weather_all.city_weather=="Haze"){
-                this.city_weather_all.city_weather="霾";
+            if (this.city_weather_all.city_weather == "Haze") {
+                this.city_weather_all.city_weather = "霾";
             }
-            if(this.city_weather_all.city_weather=="Thunderstorm"){
-                this.city_weather_all.city_weather="雷暴";
+            if (this.city_weather_all.city_weather == "Thunderstorm") {
+                this.city_weather_all.city_weather = "雷暴";
             }
-            if(this.city_weather_all.city_weather=="Drizzle"){
-                this.city_weather_all.city_weather="毛毛雨";
+            if (this.city_weather_all.city_weather == "Drizzle") {
+                this.city_weather_all.city_weather = "毛毛雨";
             }
-            if(this.city_weather_all.city_weather=="Fog"){
-                this.city_weather_all.city_weather="雾";
+            if (this.city_weather_all.city_weather == "Fog") {
+                this.city_weather_all.city_weather = "雾";
             }
-            if(this.city_weather_all.city_sea_level==null||this.city_weather_all.city_sea_level==undefined||this.city_weather_all.city_sea_level==""){
-                this.city_weather_all.city_sea_level="暂无 ";
+            if (this.city_weather_all.city_sea_level == null || this.city_weather_all.city_sea_level == undefined || this.city_weather_all.city_sea_level == "") {
+                this.city_weather_all.city_sea_level = "暂无 ";
             }
-            if(this.city_weather_all.city_grnd_level==null||this.city_weather_all.city_grnd_level==undefined||this.city_weather_all.city_grnd_level==""){
-                this.city_weather_all.city_grnd_level="暂无 ";
+            if (this.city_weather_all.city_grnd_level == null || this.city_weather_all.city_grnd_level == undefined || this.city_weather_all.city_grnd_level == "") {
+                this.city_weather_all.city_grnd_level = "暂无 ";
             }
-            if(this.city_weather_all.city_wind_gust==null||this.city_weather_all.city_wind_gust==undefined||this.city_weather_all.city_wind_gust==""){
-                this.city_weather_all.city_wind_gust="暂无 ";
+            if (this.city_weather_all.city_wind_gust == null || this.city_weather_all.city_wind_gust == undefined || this.city_weather_all.city_wind_gust == "") {
+                this.city_weather_all.city_wind_gust = "暂无 ";
             }
 
         },
-        getCityDistrict(){
+        getCityDistrict() {
             axios
                 .get(" https://www.mxnzp.com/api/address/search", {
                     params: {
-                        type:1,
+                        type: 1,
                         value: this.city_name,
-                        app_id:"nthbnoflobuxtgrc",
-                        app_secret:"AmCSM8d56gnGKjL1xb7Rngk7O9Raldh7"
+                        app_id: "nthbnoflobuxtgrc",
+                        app_secret: "AmCSM8d56gnGKjL1xb7Rngk7O9Raldh7"
                     }
                 })
                 .then((res) => {
                     console.log("获取到城市行政区信息了！")
                     console.log(res)
                     if (res.status == 200) {
-                        this.city_district_list = res.data.data[0].pchilds[0].cchilds;
-                        console.log(this.city_district_list);
-                        //将city_district_name里的name重新赋值给city_district_name
-                        for(let i=0;i<this.city_district_list.length;i++){
-                            this.city_district_list[i]=this.city_district_list[i].name;
+                        if (res.data.data == null || res.data.data == undefined || res.data.data == "") {
+                            console.log("该城市为国外城市，所以没有城市行政区信息！")
+                            this.is_foreign = true;
+                        } else {
+                            this.city_district_list = res.data.data[0].pchilds[0].cchilds;
+                            console.log(this.city_district_list);
+                            //将city_district_name里的name重新赋值给city_district_name
+                            for (let i = 0; i < this.city_district_list.length; i++) {
+                                this.city_district_list[i] = this.city_district_list[i].name;
+                            }
+                            console.log(this.city_district_list);
+                            this.city_province = res.data.data[0].name;
                         }
-                        console.log(this.city_district_list);
-                        this.city_province=res.data.data[0].name;
                     }
 
                 })
@@ -303,28 +318,28 @@ export default {
                     console.log(err);
                 });
         },
-        getWorldCityDistrict(){
-
-        },
     },
 }
 </script>
 
 
 <style scoped>
-.district_bg{
+.district_bg {
     /*background-color:rgb(249,246,226);*/
     background-image: url('../assets/dis_bg.jpeg');
     background-size: cover;
 }
-.env_bg{
+
+.env_bg {
     background-image: url('../assets/weather_bg1.jpeg');
     background-size: cover;
 }
-.society_bg{
+
+.society_bg {
     background-image: url('../assets/newspaper.jpg');
     background-size: cover;
 }
+
 .city_img {
     width: 90%;
     margin-left: 30px;
